@@ -10,13 +10,6 @@ export default defineConfig({
     // Enable open on the local network.
     open: true,
     host: true,
-    proxy: {
-      '/api': {
-        target: 'https://hacker-news.firebaseio.com/v0',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ''),
-      },
-    },
   },
   build: {
     sourcemap: true, // Enable sourcemaps
