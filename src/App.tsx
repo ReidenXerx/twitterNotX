@@ -1,10 +1,7 @@
 import { Authentification } from './components/Authentification'
 
 function App() {
-  return (
-    // <></>
-    <Authentification />
-  )
+  return <Authentification />
 }
 
 export default App
