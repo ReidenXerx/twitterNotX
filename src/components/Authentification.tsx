@@ -12,16 +12,28 @@ import {
   Box,
 } from '@mui/material'
 import { Google } from '@mui/icons-material'
+import {
+  getBearerToken,
+  getUser,
+  oauthLogin,
+} from '../services/Authentification'
 
-interface IAuthentificationProps {}
-
-export function Authentification(props: IAuthentificationProps) {
+export function Authentification() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
-    console.log(`User ${username} with ${password}`)
+    try {
+      oauthLogin()
+      // const bearerToken = await getBearerToken()
+      // const userId = '@MihailEbyo' // Replace with the desired user ID
+
+      // const user = await getUser(userId, bearerToken)
+      // console.log('User:', user)
+    } catch (error) {
+      console.error('Authentication failed:', error)
+    }
   }
   return (
     <form onSubmit={handleSubmit}>
