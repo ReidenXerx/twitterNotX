@@ -1,12 +1,10 @@
 import { RequestMethods } from '../constants'
-import { API, APIsecret, access, accessSecret } from './keys.json'
+import { API, APIsecret } from './keys.json'
 import { Buffer } from 'buffer'
-import OAuth from 'oauth-1.0a'
+import CryptoJS from 'crypto-js'
 
 const apiKey = API
 const apiSecretKey = APIsecret
-const accessKey = access
-const accessSecretKey = accessSecret
 
 // Step 1: Obtain a bearer token
 export const getBearerToken = async (): Promise<string> => {
@@ -44,53 +42,69 @@ export const getUser = async (
   }
 }
 
-export const oauthLogin = async () => {
-  const twitterOAuth = new OAuth({
-    consumer: {
-      key: accessKey,
-      secret: accessSecretKey,
-    },
-    signature_method: 'HMAC-SHA1',
-    hash_function(base_string, key) {
-      return crypto.subtle
-        .importKey('raw', new TextEncoder().encode(key), 'HMAC', false, [
-          'sign',
-        ])
-        .then((cryptoKey) =>
-          crypto.subtle.sign(
-            'HMAC',
-            cryptoKey,
-            new TextEncoder().encode(base_string),
-          ),
-        )
-        .then((arrayBuffer) => {
-          const byteArray = new Uint8Array(arrayBuffer)
-          const hexCodes = [...byteArray].map((value) =>
-            `00${value.toString(16)}`.slice(-2),
-          )
-          return hexCodes.join('')
-        })
-    },
-  })
+export const getSignature = async (baseString: string, key: string) => {
+  const encoder = new TextEncoder()
+  const data = encoder.encode(baseString)
+  const keyData = encoder.encode(key)
 
-  const request_data = {
-    url: '/token',
-    method: RequestMethods.post,
+  const cryptoKey = await window.crypto.subtle.importKey(
+    'raw',
+    keyData,
+    { name: 'HMAC', hash: 'SHA-1' },
+    false,
+    ['sign'],
+  )
+
+  const signature = await window.crypto.subtle.sign('HMAC', cryptoKey, data)
+
+  return Array.from(new Uint8Array(signature))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('')
+}
+
+export const oauthLogin = async () => {
+  const timestamp = Math.floor(Date.now() / 1000)
+  const nonce = Math.random().toString(36).substring(2)
+
+  const parameters = {
+    oauth_consumer_key: apiKey,
+    oauth_nonce: nonce,
+    oauth_signature_method: 'HMAC-SHA1',
+    oauth_timestamp: timestamp,
+    oauth_version: '1.0',
+    oauth_signature: '',
   }
 
-  fetch(request_data.url, {
-    method: request_data.method,
+  const signatureBaseString =
+    'POST&' +
+    encodeURIComponent('https://api.twitter.com/oauth/request_token') +
+    '&' +
+    Object.entries(parameters)
+      .sort()
+      .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+      .join('%26')
+  const signingKey = encodeURIComponent(apiSecretKey) + '&'
+  const signature1 = btoa(CryptoJS.HmacSHA1(signatureBaseString, signingKey))
+  const signature2 = await getSignature(signatureBaseString, signingKey)
+
+  console.log(signature1, ' |||| ', signature2)
+
+  parameters['oauth_signature'] = signature1
+
+  const authHeader =
+    'OAuth ' +
+    Object.entries(parameters)
+      .map(([k, v]) => `${encodeURIComponent(k)}="${encodeURIComponent(v)}"`)
+      .join(', ')
+
+  fetch('/request_token', {
+    method: 'POST',
     headers: {
-      Authorization: twitterOAuth.toHeader(twitterOAuth.authorize(request_data))
-        .Authorization,
-      'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+      Authorization: authHeader,
+      'Content-Type': 'application/x-www-form-urlencoded',
     },
   })
     .then((response) => response.text())
-    .then((response) => {
-      console.log(response)
-      // Parse the response (response contains request tokens)
-      // Redirect the user to the Twitter authorization page with the request tokens
-    })
-    .catch((error) => console.error('Error:', error))
+    .then((data) => console.log('DATA, ' + data))
+    .catch((err) => console.log('ERR, ' + err))
 }

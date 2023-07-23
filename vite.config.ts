@@ -26,10 +26,10 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/authorize/, ''),
       },
-      '/token': {
+      '/request_token': {
         target: 'https://api.twitter.com/oauth/request_token',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/token/, ''),
+        rewrite: (path) => path.replace(/^\/request_token/, ''),
       },
     },
   },
