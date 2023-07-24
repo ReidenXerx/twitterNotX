@@ -2,6 +2,7 @@ import { RequestMethods } from '../constants'
 import { API, APIsecret } from './keys.json'
 import { Buffer } from 'buffer'
 import CryptoJS from 'crypto-js'
+import { HMACSHA1 } from '../SHA1'
 
 const apiKey = API
 const apiSecretKey = APIsecret
@@ -77,7 +78,7 @@ export const oauthLogin = async () => {
 
   const signatureBaseString =
     'POST&' +
-    encodeURIComponent('https://api.twitter.com/oauth/request_token') +
+    encodeURIComponent('/request_token') +
     '&' +
     Object.entries(parameters)
       .sort()
@@ -86,10 +87,11 @@ export const oauthLogin = async () => {
   const signingKey = encodeURIComponent(apiSecretKey) + '&'
   const signature1 = btoa(CryptoJS.HmacSHA1(signatureBaseString, signingKey))
   const signature2 = await getSignature(signatureBaseString, signingKey)
+  const signature3 = HMACSHA1(signatureBaseString, signingKey)
 
-  console.log(signature1, ' |||| ', signature2)
+  console.log(signature1, ' |||| ', signature2, ' |||| ', signature3)
 
-  parameters['oauth_signature'] = signature1
+  parameters['oauth_signature'] = signature3
 
   const authHeader =
     'OAuth ' +

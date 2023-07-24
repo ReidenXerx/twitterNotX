@@ -12,11 +12,8 @@ import {
   Box,
 } from '@mui/material'
 import { Google } from '@mui/icons-material'
-import {
-  getBearerToken,
-  getUser,
-  oauthLogin,
-} from '../services/Authentification'
+import { getBearerToken, getUser } from '../services/Authentification'
+import { oauthLogin } from '../services/OAUTH10a'
 
 export function Authentification() {
   const [username, setUsername] = useState('')
