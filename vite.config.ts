@@ -31,6 +31,11 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/request_token/, ''),
       },
+      '/access_token': {
+        target: 'https://api.twitter.com/oauth/access_token',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/access_token/, ''),
+      },
     },
   },
   build: {
