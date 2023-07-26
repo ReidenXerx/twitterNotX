@@ -96,7 +96,6 @@ export const oauthLoginFinish = async (
   requestToken: string,
   requestTokenSecret: string,
 ) => {
-  console.log(verifier, requestToken, requestTokenSecret, '||||||||||||||||||')
   const httpMethod = RequestMethods.post
   const url = 'https://api.twitter.com/oauth/access_token'
   const timestamp = Math.floor(Date.now() / 1000)
@@ -135,10 +134,12 @@ export const oauthLoginFinish = async (
   )
   const authHeader =
     'OAuth ' +
-    Object.entries({
-      ...oauthParameters,
-      oauth_signature: signature,
-    })
+    Object.entries(
+      sortParams({
+        ...sortedParameters,
+        oauth_signature: signature,
+      }),
+    )
       .map(
         ([k, v]) =>
           `${encodeURIComponent(k)}="${encodeURIComponent(v as string)}"`,
@@ -148,14 +149,20 @@ export const oauthLoginFinish = async (
   console.log(authHeader)
 
   try {
-    const response = await fetch('/access_token', {
-      method: httpMethod,
-      headers: {
-        Authorization: authHeader,
-        'Content-Type': 'application/x-www-form-urlencoded',
+    const response = await fetch(
+      `/access_token?oauth_token=${requestToken}&oauth_verifier=${verifier}`,
+      {
+        method: httpMethod,
+        headers: {
+          Authorization: authHeader,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        // body: JSON.stringify({
+        //   oauth_verifier: verifier,
+        //   oauth_token: requestToken,
+        // }),
       },
-      //body: `oauth_verifier=${verifier}, oauth_token=${requestToken}`,
-    })
+    )
 
     if (!response.ok) {
       throw new Error(

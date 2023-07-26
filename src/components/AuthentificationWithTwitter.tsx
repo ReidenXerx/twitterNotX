@@ -16,22 +16,22 @@ export const AuthentificationWithTwitter = () => {
   const [requestData, setRequestData] = useState<{ [key: string]: string }>({})
   const [openError, setOpenError] = useState(false)
   const [openSuccess, setOpenSuccess] = useState(false)
-  const [alertText, setAlertText] = useState('')
+  const [alertSuccessText, setAlertSuccessText] = useState('')
+  const [alertErrorText, setAlertErrorText] = useState('')
 
   const handleSubmit = async () => {
     try {
-      setRequestData(await oauthLogin())
-      setAlertText(`Request tickets obtained! ${JSON.stringify(requestData)}`)
+      const result = await oauthLogin()
+      setRequestData(result)
+      setAlertSuccessText(`Request token obtained! ${JSON.stringify(result)}`)
       setOpenSuccess(true)
-      setOpenError(false)
       window.open(
-        `https://api.twitter.com/oauth/authorize?oauth_token=${requestData.oauth_token}`,
+        `https://api.twitter.com/oauth/authorize?oauth_token=${result.oauth_token}`,
         '_blanc',
       )
     } catch (error) {
-      setAlertText(`Error when obtainig request token! ${error}`)
+      setAlertErrorText(`Error when obtainig request token! ${error}`)
       setOpenError(true)
-      setOpenSuccess(false)
     }
   }
 
@@ -42,13 +42,11 @@ export const AuthentificationWithTwitter = () => {
         requestData.oauth_token,
         requestData.oauth_token_secret,
       )
-      setAlertText(`Access tickets obtained! ${JSON.stringify(result)}`)
+      setAlertSuccessText(`Access tickets obtained! ${JSON.stringify(result)}`)
       setOpenSuccess(true)
-      setOpenError(false)
     } catch (error) {
-      setAlertText(`Error when obtainig access token! ${error}`)
+      setAlertErrorText(`Error when obtainig access token! ${error}`)
       setOpenError(true)
-      setOpenSuccess(false)
     }
   }
 
@@ -91,10 +89,10 @@ export const AuthentificationWithTwitter = () => {
           Verify
         </Button>
         <Collapse in={openError}>
-          <Alert severity="error">{alertText}</Alert>
+          <Alert severity="error">{alertErrorText}</Alert>
         </Collapse>
         <Collapse in={openSuccess}>
-          <Alert severity="success">{alertText}</Alert>
+          <Alert severity="success">{alertSuccessText}</Alert>
         </Collapse>
       </Stack>
     </Box>
