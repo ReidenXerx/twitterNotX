@@ -12,101 +12,127 @@ import {
   Box,
 } from '@mui/material'
 import { Google } from '@mui/icons-material'
+import { oauthLogin, oauthLoginFinish } from '../services/OAUTH10a'
+import { useAsyncEffect } from '../services/useAsyncEffect'
 
-interface IAuthentificationProps {}
-
-export function Authentification(props: IAuthentificationProps) {
+export const Authentification = () => {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [requestData, setRequestData] = useState<{ [key: string]: string }>({})
 
-  const handleSubmit = (event: React.FormEvent) => {
+  useAsyncEffect(async () => {
+    try {
+      const result = await oauthLoginFinish(
+        username,
+        requestData.oauth_token,
+        requestData.oauth_token_secret,
+      )
+      console.log(result)
+    } catch (error) {
+      console.log(error)
+    }
+  }, [username])
+
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
-    console.log(`User ${username} with ${password}`)
+    try {
+      setRequestData(await oauthLogin())
+      window.open(
+        `https://api.twitter.com/oauth/authorize?oauth_token=${requestData.oauth_token}`,
+        '_blanc',
+      )
+
+      // const bearerToken = await getBearerToken()
+      // const userId = '@MihailEbyo' // Replace with the desired user ID
+
+      // const user = await getUser(userId, bearerToken)
+      // console.log('User:', user)
+    } catch (error) {
+      console.error('Authentication failed:', error)
+    }
   }
   return (
-    <form onSubmit={handleSubmit}>
-      <Box
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-        minHeight="90vh"
-      >
-        <Stack width="360px" alignItems="center">
-          <Typography variant="h5" mb="20px" fontWeight="bold">
-            Log in to your account
+    <Box
+      display="flex"
+      alignItems="center"
+      justifyContent="center"
+      minHeight="90vh"
+    >
+      <Stack width="360px" alignItems="center">
+        <Typography variant="h5" mb="20px" fontWeight="bold">
+          Log in to your account
+        </Typography>
+        <Button
+          type="submit"
+          variant="outlined"
+          size="large"
+          fullWidth
+          endIcon={<SvgIcon component={Google} />}
+          sx={{
+            marginBottom: '20px',
+            fontWeight: 'bold',
+            border: '1px solid',
+          }}
+        >
+          Login with Google
+        </Button>
+        <Divider sx={{ width: '100%' }}>
+          <Typography textTransform="uppercase" color="GrayText">
+            or
           </Typography>
-          <Button
-            type="submit"
-            variant="outlined"
-            size="large"
-            fullWidth
-            endIcon={<SvgIcon component={Google} />}
-            sx={{
-              marginBottom: '20px',
-              fontWeight: 'bold',
-              border: '1px solid',
-            }}
-          >
-            Login with Google
-          </Button>
-          <Divider sx={{ width: '100%' }}>
-            <Typography textTransform="uppercase" color="GrayText">
-              or
-            </Typography>
-          </Divider>
-          <TextField
-            label="Username/Email"
-            variant="outlined"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            fullWidth
-            margin="normal"
-          />
-          <TextField
-            label="Password"
-            variant="outlined"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            fullWidth
-            margin="normal"
-          />
-          <FormControlLabel
-            sx={{ alignSelf: 'flex-start' }}
-            control={<Checkbox color="primary" />}
-            label="Remember Me"
-          />
-          <Button
-            type="submit"
-            variant="contained"
-            color="primary"
-            size="large"
-            fullWidth
-            sx={{ marginTop: '20px' }}
-          >
-            Log In
-          </Button>
-          <Button
-            variant="text"
-            color="primary"
-            size="small"
-            sx={{
-              textTransform: 'capitalize',
-              fontWeight: 'bold',
-              marginBottom: '20px',
-            }}
-          >
-            Forgot your password?
-          </Button>
-          <Divider sx={{ width: '100%', marginBottom: '20px' }} />
-          <Typography>
-            Don`t have an account?{' '}
-            <Link underline="none" sx={{ cursor: 'pointer' }}>
-              Register
-            </Link>{' '}
-          </Typography>
-        </Stack>
-      </Box>
-    </form>
+        </Divider>
+        <TextField
+          label="Username/Email"
+          variant="outlined"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          fullWidth
+          margin="normal"
+        />
+        <TextField
+          label="Password"
+          variant="outlined"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          fullWidth
+          margin="normal"
+        />
+        <FormControlLabel
+          sx={{ alignSelf: 'flex-start' }}
+          control={<Checkbox color="primary" />}
+          label="Remember Me"
+        />
+        <Button
+          onClick={handleSubmit}
+          variant="contained"
+          color="primary"
+          size="large"
+          fullWidth
+          sx={{ marginTop: '20px' }}
+        >
+          Log In
+        </Button>
+        <Button
+          variant="text"
+          color="primary"
+          size="small"
+          sx={{
+            textTransform: 'capitalize',
+            fontWeight: 'bold',
+            marginBottom: '20px',
+          }}
+        >
+          Forgot your password?
+        </Button>
+        <Divider sx={{ width: '100%', marginBottom: '20px' }} />
+        <Typography>
+          Don`t have an account?{' '}
+          <Link underline="none" sx={{ cursor: 'pointer' }}>
+            Register
+          </Link>{' '}
+        </Typography>
+      </Stack>
+    </Box>
   )
 }

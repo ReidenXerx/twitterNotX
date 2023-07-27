@@ -1,7 +1,7 @@
-import { Authentification } from './components/Authentification'
+import { AuthentificationWithTwitter } from './components/AuthentificationWithTwitter'
 
 function App() {
-  return <Authentification />
+  return <AuthentificationWithTwitter />
 }
 
 export default App
