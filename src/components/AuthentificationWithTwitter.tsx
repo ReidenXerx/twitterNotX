@@ -9,7 +9,12 @@ import {
   Collapse,
 } from '@mui/material'
 import TwitterIcon from '@mui/icons-material/Twitter'
-import { oauthLogin, oauthLoginFinish } from '../services/OAUTH10a'
+import {
+  oauthLogin,
+  oauthLoginFinish,
+  verifyCredentials,
+} from '../services/OAUTH10a'
+import { objectToKeyValueArray } from '../util'
 
 export const AuthentificationWithTwitter = () => {
   const [verifier, setVerifier] = useState('')
@@ -23,7 +28,9 @@ export const AuthentificationWithTwitter = () => {
     try {
       const result = await oauthLogin()
       setRequestData(result)
-      setAlertSuccessText(`Request token obtained! ${JSON.stringify(result)}`)
+      setAlertSuccessText(
+        `Request token obtained! ${objectToKeyValueArray(result)}`,
+      )
       setOpenSuccess(true)
       window.open(
         `https://api.twitter.com/oauth/authorize?oauth_token=${result.oauth_token}`,
@@ -42,8 +49,20 @@ export const AuthentificationWithTwitter = () => {
         requestData.oauth_token,
         requestData.oauth_token_secret,
       )
-      setAlertSuccessText(`Access tickets obtained! ${JSON.stringify(result)}`)
+      setAlertSuccessText(
+        `Access tickets obtained! ${objectToKeyValueArray(result)}`,
+      )
       setOpenSuccess(true)
+      setTimeout(async () => {
+        const user = await verifyCredentials(
+          result.oauth_token,
+          result.oauth_token_secret,
+        )
+        setAlertSuccessText(
+          `User Data acquired! ${objectToKeyValueArray(user)}`,
+        )
+        setOpenSuccess(true)
+      }, 1000)
     } catch (error) {
       setAlertErrorText(`Error when obtainig access token! ${error}`)
       setOpenError(true)

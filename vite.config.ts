@@ -36,6 +36,11 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/access_token/, ''),
       },
+      '/verify_credentials.json': {
+        target: 'https://api.twitter.com/1.1/account/verify_credentials.json',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/verify_credentials.json/, ''),
+      },
     },
   },
   build: {

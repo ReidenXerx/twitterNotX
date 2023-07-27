@@ -29,7 +29,10 @@ const formParameterString = (parameters: { [key: string]: string }) => {
     })
     .join('&') as string
 }
-
+/*
+ * First step of OAUTH 1.0a authenification.
+ * Returns request token required for second step with redirecting to Twitter
+ */
 export const oauthLogin = async () => {
   const httpMethod = RequestMethods.post
   const url = 'https://api.twitter.com/oauth/request_token'
@@ -90,7 +93,10 @@ export const oauthLogin = async () => {
     throw err // Rethrow the error to be caught by the caller if necessary.
   }
 }
-
+/*
+ * Third step of OAUTH 1.0a authenification.
+ * Returns access token required for authentification of user
+ */
 export const oauthLoginFinish = async (
   verifier: string,
   requestToken: string,
@@ -157,10 +163,6 @@ export const oauthLoginFinish = async (
           Authorization: authHeader,
           'Content-Type': 'application/x-www-form-urlencoded',
         },
-        // body: JSON.stringify({
-        //   oauth_verifier: verifier,
-        //   oauth_token: requestToken,
-        // }),
       },
     )
 
@@ -173,5 +175,71 @@ export const oauthLoginFinish = async (
   } catch (err) {
     console.log('ERR', err)
     throw err // Rethrow the error to be caught by the caller if necessary.
+  }
+}
+/*
+ * Check of access tokens returned on previous step
+ * Returns user information
+ */
+export const verifyCredentials = async (
+  accessToken: string,
+  accessTokenSecret: string,
+) => {
+  const url = 'https://api.twitter.com/1.1/account/verify_credentials.json'
+  const httpMethod = RequestMethods.get
+  const timestamp = Math.floor(Date.now() / 1000)
+  const nonce = Math.random().toString(36).substring(2)
+  const api = API
+  const apiSecret = APIsecret
+  const oauthParameters = {
+    oauth_consumer_key: api,
+    oauth_nonce: nonce,
+    oauth_signature_method: 'HMAC-SHA1',
+    oauth_timestamp: String(timestamp),
+    oauth_token: accessToken,
+    oauth_version: '1.0',
+  }
+
+  // Sort the parameters by their field name
+  const sortedParameters: { [key: string]: string } =
+    sortParams(oauthParameters)
+
+  // Form the parameter string
+  const parameterString = formParameterString(sortedParameters)
+
+  const signatureBaseString = `${httpMethod.toUpperCase()}&${encodeURIComponent(
+    url,
+  )}&${encodeURIComponent(parameterString)}`
+  const signingKey = `${encodeURIComponent(apiSecret)}&${encodeURIComponent(
+    accessTokenSecret,
+  )}`
+
+  const signature = CryptoJS.HmacSHA1(signatureBaseString, signingKey).toString(
+    CryptoJS.enc.Base64,
+  )
+  const authHeader = `OAuth ${Object.entries({
+    ...sortedParameters,
+    oauth_signature: signature,
+  })
+    .map(([k, v]) => `${encodeURIComponent(k)}="${encodeURIComponent(v)}"`)
+    .join(', ')}`
+
+  try {
+    const response = await fetch('/verify_credentials.json', {
+      method: httpMethod,
+      headers: {
+        Authorization: authHeader,
+      },
+    })
+
+    if (!response.ok) {
+      throw new Error(
+        `HTTP Error Response: ${response.status} ${response.statusText}`,
+      )
+    }
+
+    return await response.json()
+  } catch (err) {
+    console.error('Error:', err)
   }
 }
