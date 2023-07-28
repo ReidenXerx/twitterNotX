@@ -12,10 +12,10 @@ import {
   Box,
 } from '@mui/material'
 import { Google } from '@mui/icons-material'
+import { ApiEndpoints, apiRequest } from '../services/twitterRequester'
+import { useAsyncEffect } from '../services/useAsyncEffect'
 
-interface IAuthentificationProps {}
-
-export function Authentification(props: IAuthentificationProps) {
+export function Authentification() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
 
@@ -23,6 +23,41 @@ export function Authentification(props: IAuthentificationProps) {
     event.preventDefault()
     console.log(`User ${username} with ${password}`)
   }
+
+  useAsyncEffect(async () => {
+    const access = '1671546374440067072-LopcIl3xhEPExVapXnc0nSBPsqmLxx'
+    const accessSecret = '2pjBikh74Z0mVK9ifMVJkxOfTGaOju2oMJlsKMbCzn9bP'
+    const result1 = await apiRequest(
+      ApiEndpoints['verifyCredentials'],
+      access,
+      accessSecret,
+    )
+    console.log(JSON.stringify(result1))
+    const result2 = await apiRequest(
+      ApiEndpoints['lookup'],
+      access,
+      accessSecret,
+    )
+    console.log(JSON.stringify(result2))
+    const result3 = await apiRequest(
+      ApiEndpoints['update'],
+      access,
+      accessSecret,
+    )
+    console.log(JSON.stringify(result3))
+    const result4 = await apiRequest(
+      ApiEndpoints['tweets'],
+      access,
+      accessSecret,
+    )
+    console.log(JSON.stringify(result4))
+    const result5 = await apiRequest(
+      ApiEndpoints['userTimeline'],
+      access,
+      accessSecret,
+    )
+    console.log(JSON.stringify(result5))
+  }, [])
   return (
     <form onSubmit={handleSubmit}>
       <Box
